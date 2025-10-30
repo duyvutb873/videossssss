@@ -12,6 +12,7 @@ class MediaShowPage extends StatefulWidget {
 
 class _MediaShowPageState extends State<MediaShowPage> {
   int _currentIndex = 0;
+  int _sequence = 0; // tăng sau mỗi lần chuyển media để ép rebuild
 
   @override
   void didChangeDependencies() {
@@ -26,6 +27,7 @@ class _MediaShowPageState extends State<MediaShowPage> {
   void nextMedia(int total) {
     setState(() {
       _currentIndex = (_currentIndex + 1) % total;
+      _sequence++;
     });
   }
 
@@ -42,6 +44,7 @@ class _MediaShowPageState extends State<MediaShowPage> {
     return MediaShowTemplate(
       media: mediaList[_currentIndex],
       onMediaFinished: () => nextMedia(mediaList.length),
+      sequence: _sequence,
     );
   }
 }
