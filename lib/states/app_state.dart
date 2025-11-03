@@ -57,21 +57,18 @@ class AppState extends ChangeNotifier {
     notifyListeners();
     final resp = await _api.loginAndFetchMedia(code, pass);
     _loadingAutoLogin = false;
-    if (resp != null &&
-        resp['device'] != null &&
-        resp['content'] != null &&
-        resp['content']['media'] != null) {
+    if (resp != null && resp['device'] != null && resp['content'] != null) {
+      final list = parsePlaylistFromLoginResponse(resp);
       accessCode = code;
       password = pass;
       deviceInfo = resp['device'] as Map<String, dynamic>;
-      campaignName = resp['content']['campaignName'];
-      final media = Media.fromJson(resp['content']['media']);
-      _mediaList = [media];
+      campaignName = resp['content']['campaignName']?.toString();
+      _mediaList = list;
       await _saveCurrentState();
-      _isLoggedIn = true;
+      _isLoggedIn = list.isNotEmpty;
       _loginError = null;
       notifyListeners();
-      return true;
+      return _isLoggedIn;
     } else {
       _loginError =
           'Sai mã truy cập hoặc mật khẩu, hoặc server không phản hồi.';
@@ -84,18 +81,15 @@ class AppState extends ChangeNotifier {
   Future<bool> attemptLoginFromSaved() async {
     if (accessCode == null || password == null) return false;
     final resp = await _api.loginAndFetchMedia(accessCode!, password!);
-    if (resp != null &&
-        resp['device'] != null &&
-        resp['content'] != null &&
-        resp['content']['media'] != null) {
+    if (resp != null && resp['device'] != null && resp['content'] != null) {
+      final list = parsePlaylistFromLoginResponse(resp);
       deviceInfo = resp['device'] as Map<String, dynamic>;
-      campaignName = resp['content']['campaignName'];
-      final media = Media.fromJson(resp['content']['media']);
-      _mediaList = [media];
+      campaignName = resp['content']['campaignName']?.toString();
+      _mediaList = list;
       await _saveCurrentState();
-      _isLoggedIn = true;
+      _isLoggedIn = list.isNotEmpty;
       _loginError = null;
-      return true;
+      return _isLoggedIn;
     }
     // Dùng media đã lưu cục bộ nếu có, trạng thái vẫn là login thành công (nếu media đó còn)
     _isLoggedIn = _mediaList.isNotEmpty;
