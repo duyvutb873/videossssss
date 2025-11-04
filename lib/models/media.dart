@@ -57,24 +57,53 @@ int? _parseNullableInt(dynamic v) {
   return int.tryParse(s);
 }
 
-// Helpers để trích playlist từ response login dạng mới
+// Helpers để trích playlist từ response login
+// Định dạng response từ API:
 // {
-//   "device": { ... },
+//   "device": {
+//     "id": "...",
+//     "name": "...",
+//     "type": "...",
+//     "location": "...",
+//     "user_id": "..."
+//   },
 //   "content": {
 //     "campaignName": "...",
 //     "campaignId": "...",
-//     "playlist": [ {id, url, name, type, duration}, ... ]
+//     "playlist": [
+//       {
+//         "id": "...",
+//         "url": "...",
+//         "name": "...",
+//         "type": "image|video|audio",
+//         "duration": null hoặc số giây
+//       },
+//       ...
+//     ]
 //   }
 // }
 
 List<Media> parsePlaylistFromLoginResponse(Map<String, dynamic> response) {
-  final content = response['content'];
-  if (content is! Map<String, dynamic>) return const [];
-  final playlist = content['playlist'];
-  if (playlist is! List) return const [];
-  return playlist
-      .whereType<Map>()
-      .map((e) => Media.fromJson(e.cast<String, dynamic>()))
-      .toList();
-}
+  try {
+    final content = response['content'];
+    if (content is! Map<String, dynamic>) return const [];
 
+    final playlist = content['playlist'];
+    if (playlist is! List) return const [];
+
+    return playlist
+        .whereType<Map>()
+        .map((item) {
+          try {
+            return Media.fromJson(item.cast<String, dynamic>());
+          } catch (_) {
+            // Bỏ qua item không hợp lệ
+            return null;
+          }
+        })
+        .whereType<Media>()
+        .toList();
+  } catch (_) {
+    return const [];
+  }
+}
